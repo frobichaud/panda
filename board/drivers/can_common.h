@@ -162,9 +162,10 @@ void can_set_forwarding(uint8_t from, uint8_t to) {
 
 void ignition_can_hook(CANPacket_t *msg) {
   int bus = GET_BUS(msg);
+  int addr = GET_ADDR(msg);
+  int len = GET_LEN(msg);
+
   if (bus == 0) {
-    int addr = GET_ADDR(msg);
-    int len = GET_LEN(msg);
 
     // GM exception
     if ((addr == 0x1F1) && (len == 8)) {
@@ -208,6 +209,13 @@ void ignition_can_hook(CANPacket_t *msg) {
       ignition_can_cnt = 0U;
     }
 
+  }
+
+  // Tesla Model S exception
+  if (((bus == 0) || (bus == 1)) && (addr == 0x348) && (len == 8)) {
+    // GTW_status
+    ignition_can = (msg->data[0] & 0x1U) != 0U;
+    ignition_can_cnt = 0U;
   }
 }
 
